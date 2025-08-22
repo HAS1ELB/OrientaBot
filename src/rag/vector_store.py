@@ -9,9 +9,19 @@ import logging
 from pathlib import Path
 from typing import List, Dict, Any, Tuple
 import numpy as np
-from sentence_transformers import SentenceTransformer
-import faiss
 from .pdf_processor import DocumentChunk
+
+# Try to import optional ML dependencies
+try:
+    from sentence_transformers import SentenceTransformer
+    import faiss
+    ML_DEPENDENCIES_AVAILABLE = True
+except ImportError as e:
+    ML_DEPENDENCIES_AVAILABLE = False
+    SentenceTransformer = None
+    faiss = None
+    logger = logging.getLogger(__name__)
+    logger.warning(f"ML dependencies not available: {e}. RAG functionality will be disabled.")
 
 logger = logging.getLogger(__name__)
 
@@ -28,6 +38,7 @@ class VectorStore:
             embedding_model: Modèle d'embeddings à utiliser
             vector_db_path: Chemin vers le dossier de la base vectorielle
         """
+        self.ml_available = ML_DEPENDENCIES_AVAILABLE
         self.embedding_model_name = embedding_model
         self.vector_db_path = Path(vector_db_path)
         self.vector_db_path.mkdir(exist_ok=True)
@@ -37,19 +48,29 @@ class VectorStore:
         self.chunks_path = self.vector_db_path / "chunks.pkl"
         self.metadata_path = self.vector_db_path / "metadata.json"
         
-        # Initialiser le modèle d'embeddings
-        self._load_embedding_model()
+        # Initialiser le modèle d'embeddings si disponible
+        self.embedding_model = None
+        self.embedding_dimension = None
+        
+        if self.ml_available:
+            self._load_embedding_model()
+        else:
+            logger.warning("ML dependencies not available. Vector store will operate in fallback mode.")
         
         # Charger la base existante si elle existe
         self.index = None
         self.chunks = []
         self.metadata = {}
         
-        if self._database_exists():
+        if self._database_exists() and self.ml_available:
             self.load_database()
     
     def _load_embedding_model(self):
         """Charge le modèle d'embeddings"""
+        if not self.ml_available:
+            logger.warning("Cannot load embedding model: ML dependencies not available")
+            return
+            
         try:
             logger.info(f"Chargement du modèle d'embeddings: {self.embedding_model_name}")
             self.embedding_model = SentenceTransformer(self.embedding_model_name)
@@ -57,7 +78,7 @@ class VectorStore:
             logger.info(f"Dimension des embeddings: {self.embedding_dimension}")
         except Exception as e:
             logger.error(f"Erreur lors du chargement du modèle d'embeddings: {e}")
-            raise
+            self.ml_available = False
     
     def _database_exists(self) -> bool:
         """Vérifie si une base vectorielle existe déjà"""
@@ -75,6 +96,9 @@ class VectorStore:
         Returns:
             Array numpy des embeddings
         """
+        if not self.ml_available or self.embedding_model is None:
+            raise RuntimeError("ML dependencies not available for creating embeddings")
+            
         try:
             embeddings = self.embedding_model.encode(
                 texts, 
@@ -93,6 +117,10 @@ class VectorStore:
         Args:
             chunks: Liste des chunks de documents
         """
+        if not self.ml_available:
+            logger.warning("Cannot build index: ML dependencies not available")
+            return
+            
         if not chunks:
             logger.warning("Aucun chunk fourni pour construire l'index")
             return
@@ -129,6 +157,10 @@ class VectorStore:
     
     def save_database(self) -> None:
         """Sauvegarde la base vectorielle sur disque"""
+        if not self.ml_available:
+            logger.warning("Cannot save database: ML dependencies not available")
+            return
+            
         try:
             logger.info("Sauvegarde de la base vectorielle...")
             
@@ -152,6 +184,10 @@ class VectorStore:
     
     def load_database(self) -> None:
         """Charge la base vectorielle depuis le disque"""
+        if not self.ml_available:
+            logger.warning("Cannot load database: ML dependencies not available")
+            return
+            
         try:
             logger.info("Chargement de la base vectorielle existante...")
             
@@ -189,6 +225,10 @@ class VectorStore:
         Returns:
             Liste des chunks trouvés avec leurs scores
         """
+        if not self.ml_available:
+            logger.warning("Cannot search: ML dependencies not available")
+            return []
+            
         if self.index is None or not self.chunks:
             logger.warning("Base vectorielle non initialisée")
             return []
@@ -222,10 +262,11 @@ class VectorStore:
             'index_size': self.index.ntotal if self.index else 0,
             'embedding_dimension': self.embedding_dimension,
             'sources': self.metadata.get('sources', []),
-            'database_exists': self._database_exists()
+            'database_exists': self._database_exists(),
+            'ml_available': self.ml_available
         }
         
-        if self.chunks:
+        if self.chunks and self.ml_available:
             # Statistiques sur les chunks
             chunk_sizes = [len(chunk.content) for chunk in self.chunks]
             stats.update({

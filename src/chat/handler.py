@@ -15,7 +15,8 @@ try:
     logger = logging.getLogger(__name__)
 except ImportError as e:
     RAG_AVAILABLE = False
-    print(f"Warning: RAG components not available: {e}")
+    logger = logging.getLogger(__name__)
+    logger.warning(f"RAG components not available: {e}")
 
 class ChatHandler:
     def __init__(self):

@@ -9,5 +9,6 @@ try:
     from .vector_store import VectorStore
     from .pdf_processor import PDFProcessor, DocumentChunk
     __all__ = ['RAGManager', 'VectorStore', 'PDFProcessor', 'DocumentChunk']
-except ImportError:
+except ImportError as e:
+    print(f"Warning: RAG dependencies not available: {e}")
     __all__ = []

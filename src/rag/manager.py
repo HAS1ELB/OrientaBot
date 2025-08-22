@@ -64,6 +64,11 @@ class RAGManager:
         Returns:
             True si l'initialisation a réussi
         """
+        # Vérifier si les dépendances ML sont disponibles
+        if not self.vector_store.ml_available:
+            logger.warning("ML dependencies not available. RAG system will be disabled.")
+            return False
+            
         try:
             # Vérifier si la base existe déjà
             if not force_rebuild and self.vector_store._database_exists():
@@ -121,6 +126,10 @@ class RAGManager:
         Returns:
             Liste des chunks pertinents avec leurs scores
         """
+        if not self.vector_store.ml_available:
+            logger.warning("Cannot search: ML dependencies not available")
+            return []
+            
         if top_k is None:
             top_k = self.max_context_chunks
         
@@ -284,6 +293,7 @@ Tu réponds avec tes connaissances générales du système éducatif marocain en
             'vector_store_stats': self.vector_store.get_stats(),
             'pdf_folder': str(self.pdf_folder),
             'pdf_files_count': len(list(self.pdf_folder.glob("*.pdf"))) if self.pdf_folder.exists() else 0,
+            'ml_available': self.vector_store.ml_available,
             'config': {
                 'chunk_size': self.pdf_processor.chunk_size,
                 'chunk_overlap': self.pdf_processor.chunk_overlap,
