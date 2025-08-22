@@ -1,0 +1,11 @@
+{
+  "total_chunks": 42,
+  "embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
+  "embedding_dimension": 384,
+  "sources": [
+    "ISPITS.pdf",
+    "EMSI-CASA.pdf",
+    "Ecole-Nationale-des-Sciences-Appliquees-El-Jadida.pdf"
+  ],
+  "creation_time": "2025-08-22T18:43:02.616513"
+}
