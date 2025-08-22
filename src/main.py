@@ -3,7 +3,7 @@ Main application file for OrientaBot - Conseiller d'orientation Maroc
 Updated to work with enhanced prompts
 """
 import streamlit as st
-from components import (
+from ui.components import (
     setup_page_config, 
     render_header, 
     render_info_box, 
@@ -11,9 +11,9 @@ from components import (
     render_footer,
     apply_custom_styles
 )
-from session_manager import SessionManager
-from chat_handler import ChatHandler
-from prompts import (
+from core.session_manager import SessionManager
+from chat.handler import ChatHandler
+from chat.prompts import (
     get_system_prompt, 
     get_conversation_starters
 )

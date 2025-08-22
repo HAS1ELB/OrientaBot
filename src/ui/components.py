@@ -2,13 +2,13 @@
 UI components for the OrientaBot application
 """
 import streamlit as st
-from styles import get_custom_css, get_info_box_html, get_footer_html
-from prompts import get_tips_sidebar
-from session_manager import SessionManager
+from .styles import get_custom_css, get_info_box_html, get_footer_html
+from chat.prompts import get_tips_sidebar
+from core.session_manager import SessionManager
 
 def setup_page_config():
     """Configure the Streamlit page"""
-    from config import APP_TITLE, APP_ICON, PAGE_LAYOUT, SIDEBAR_STATE
+    from core.config import APP_TITLE, APP_ICON, PAGE_LAYOUT, SIDEBAR_STATE
     
     st.set_page_config(
         page_title=APP_TITLE,

@@ -11,7 +11,7 @@ from typing import List, Dict, Any, Tuple
 import numpy as np
 from sentence_transformers import SentenceTransformer
 import faiss
-from pdf_processor import DocumentChunk
+from .pdf_processor import DocumentChunk
 
 logger = logging.getLogger(__name__)
 

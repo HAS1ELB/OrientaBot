@@ -6,11 +6,11 @@ import re
 import streamlit as st
 import logging
 from groq import Groq
-from config import GROQ_API_KEY, GROQ_MODEL, MAX_TOKENS
+from core.config import GROQ_API_KEY, GROQ_MODEL, MAX_TOKENS
 
 # Import RAG components
 try:
-    from rag_manager import RAGManager
+    from rag.manager import RAGManager
     RAG_AVAILABLE = True
     logger = logging.getLogger(__name__)
 except ImportError as e:

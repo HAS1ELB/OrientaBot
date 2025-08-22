@@ -9,8 +9,8 @@ from pathlib import Path
 from typing import List, Dict, Any, Optional, Tuple
 import re
 
-from pdf_processor import PDFProcessor, DocumentChunk
-from vector_store import VectorStore
+from .pdf_processor import PDFProcessor, DocumentChunk
+from .vector_store import VectorStore
 
 logger = logging.getLogger(__name__)
 
@@ -18,8 +18,8 @@ class RAGManager:
     """Gestionnaire principal du système RAG pour OrientaBot"""
     
     def __init__(self, 
-                 pdf_folder: str = "pdfs",
-                 vector_db_path: str = "vector_db",
+                 pdf_folder: str = "data/raw",
+                 vector_db_path: str = "data/processed",
                  chunk_size: int = 800,
                  chunk_overlap: int = 150,
                  embedding_model: str = "sentence-transformers/all-MiniLM-L6-v2"):
