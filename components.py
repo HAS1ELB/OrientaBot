@@ -3,7 +3,7 @@ UI components for the OrientaBot application
 """
 import streamlit as st
 from styles import get_custom_css, get_info_box_html, get_footer_html
-from prompts import get_sidebar_tips
+from prompts import get_tips_sidebar
 from session_manager import SessionManager
 
 def setup_page_config():
@@ -47,7 +47,7 @@ def render_sidebar():
         
         st.markdown("---")
         
-        st.markdown(get_sidebar_tips())
+        st.markdown(get_tips_sidebar())
 
 def render_footer():
     """Render the footer"""

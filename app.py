@@ -15,8 +15,7 @@ from session_manager import SessionManager
 from chat_handler import ChatHandler
 from prompts import (
     get_system_prompt, 
-    get_conversation_starters,
-    get_dynamic_prompts
+    get_conversation_starters
 )
 
 def get_appropriate_greeting():
@@ -25,9 +24,9 @@ def get_appropriate_greeting():
     """
     conversation_starters = get_conversation_starters()
     
-    # If no messages yet, use general greeting
+    # If no messages yet, use first interaction greeting
     if not st.session_state.messages:
-        return conversation_starters.get("greeting_uncertain")
+        return conversation_starters.get("first_interaction")
     
     return None
 
@@ -73,8 +72,6 @@ def enhance_system_prompt_with_context(base_prompt, user_context):
     """
     Enhance the system prompt based on detected user context
     """
-    dynamic_prompts = get_dynamic_prompts()
-    
     context_additions = {
         "anxious_student": "\n\n# CONTEXTE SPÉCIAL: Étudiant anxieux détecté. Utilise un ton particulièrement rassurant et décompose les étapes de manière très claire.",
         "parent_pressure": "\n\n# CONTEXTE SPÉCIAL: Possible conflit familial détecté. Active le mode médiation pour trouver des solutions équilibrées.",
