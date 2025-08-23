@@ -1,6 +1,7 @@
 """
-Système de mémoire contextuelle pour OrientaBot
+Système de mémoire contextuelle pour OrientaBot (Backend API)
 Gère le profil utilisateur persistant et l'historique des conversations
+Adapté pour fonctionner sans Streamlit
 """
 
 import json
@@ -11,8 +12,8 @@ from dataclasses import dataclass, field, asdict
 from datetime import datetime, timedelta
 from enum import Enum
 import re
-import streamlit as st
 from collections import defaultdict, Counter
+from uuid import uuid4
 
 logger = logging.getLogger(__name__)
 
@@ -282,7 +283,7 @@ class InformationExtractor:
         return detected_traits
 
 class ContextualMemorySystem:
-    """Système de mémoire contextuelle principal"""
+    """Système de mémoire contextuelle principal (Backend API)"""
     
     def __init__(self, storage_path: str = "data/user_profiles"):
         """
@@ -302,29 +303,48 @@ class ContextualMemorySystem:
         self.session_cache = {}
         self.max_cache_size = 50
         
+        # Cache des sessions actives (remplace st.session_state pour l'API)
+        self._active_sessions: Dict[str, Dict[str, Any]] = {}
+        
         logger.info(f"Système de mémoire contextuelle initialisé: {self.storage_path}")
     
-    def get_user_id(self) -> str:
-        """Obtient l'ID utilisateur depuis la session Streamlit"""
-        # Utiliser l'ID de session Streamlit ou en créer un
-        if 'user_id' not in st.session_state:
-            from uuid import uuid4
-            st.session_state.user_id = str(uuid4())
+    def get_or_create_user_id(self, session_id: Optional[str] = None) -> str:
+        """
+        Obtient ou crée un ID utilisateur pour une session API
         
-        return st.session_state.user_id
+        Args:
+            session_id: ID de session API (optionnel)
+            
+        Returns:
+            ID utilisateur
+        """
+        if session_id and session_id in self._active_sessions:
+            if 'user_id' in self._active_sessions[session_id]:
+                return self._active_sessions[session_id]['user_id']
+        
+        # Créer un nouvel ID utilisateur
+        user_id = str(uuid4())
+        
+        if session_id:
+            if session_id not in self._active_sessions:
+                self._active_sessions[session_id] = {}
+            self._active_sessions[session_id]['user_id'] = user_id
+        
+        return user_id
     
-    def load_user_profile(self, user_id: Optional[str] = None) -> StudentProfile:
+    def load_user_profile(self, user_id: Optional[str] = None, session_id: Optional[str] = None) -> StudentProfile:
         """
         Charge le profil utilisateur depuis le stockage
         
         Args:
-            user_id: ID de l'utilisateur (optionnel, utilise session si None)
+            user_id: ID de l'utilisateur (optionnel)
+            session_id: ID de session (optionnel, pour récupérer user_id)
             
         Returns:
             Profil utilisateur chargé ou nouveau
         """
         if user_id is None:
-            user_id = self.get_user_id()
+            user_id = self.get_or_create_user_id(session_id)
         
         profile_path = self.storage_path / f"profile_{user_id}.json"
         
@@ -361,15 +381,16 @@ class ContextualMemorySystem:
         
         return self.current_profile
     
-    def save_user_profile(self, user_id: Optional[str] = None) -> None:
+    def save_user_profile(self, user_id: Optional[str] = None, session_id: Optional[str] = None) -> None:
         """
         Sauvegarde le profil utilisateur
         
         Args:
             user_id: ID de l'utilisateur (optionnel)
+            session_id: ID de session (optionnel)
         """
         if user_id is None:
-            user_id = self.get_user_id()
+            user_id = self.get_or_create_user_id(session_id)
         
         if self.current_profile is None:
             return
@@ -398,18 +419,19 @@ class ContextualMemorySystem:
         except Exception as e:
             logger.error(f"Erreur lors de la sauvegarde du profil {user_id}: {e}")
     
-    def start_conversation_session(self, topic: Optional[str] = None) -> str:
+    def start_conversation_session(self, topic: Optional[str] = None, session_id: Optional[str] = None) -> str:
         """
         Démarre une nouvelle session de conversation
         
         Args:
             topic: Sujet de la session (optionnel)
+            session_id: ID de session forcé (optionnel)
             
         Returns:
             ID de la session créée
         """
-        from uuid import uuid4
-        session_id = str(uuid4())
+        if session_id is None:
+            session_id = str(uuid4())
         
         self.current_session = ConversationSession(
             session_id=session_id,
@@ -427,7 +449,8 @@ class ContextualMemorySystem:
     def add_conversation_turn(self, 
                              user_message: str, 
                              assistant_response: str,
-                             detected_intent: Optional[str] = None) -> None:
+                             detected_intent: Optional[str] = None,
+                             session_id: Optional[str] = None) -> None:
         """
         Ajoute un échange à la session courante
         
@@ -435,9 +458,10 @@ class ContextualMemorySystem:
             user_message: Message de l'utilisateur
             assistant_response: Réponse de l'assistant
             detected_intent: Intention détectée (optionnel)
+            session_id: ID de session (optionnel)
         """
         if self.current_session is None:
-            self.start_conversation_session()
+            self.start_conversation_session(session_id=session_id)
         
         # Extraire les informations du message utilisateur
         extracted_info = self.extractor.extract_from_message(user_message)
@@ -454,16 +478,17 @@ class ContextualMemorySystem:
         self.current_session.turns.append(turn)
         
         # Mettre à jour le profil avec les nouvelles informations
-        self.update_profile_from_turn(turn)
+        self.update_profile_from_turn(turn, session_id=session_id)
         
         logger.info(f"Turn ajouté à la session {self.current_session.session_id}")
     
-    def update_profile_from_turn(self, turn: ConversationTurn) -> None:
+    def update_profile_from_turn(self, turn: ConversationTurn, session_id: Optional[str] = None) -> None:
         """
         Met à jour le profil utilisateur avec les informations d'un turn
         
         Args:
             turn: Tour de conversation à analyser
+            session_id: ID de session (optionnel)
         """
         if self.current_profile is None:
             self.current_profile = StudentProfile()
@@ -502,7 +527,7 @@ class ContextualMemorySystem:
         self.current_profile.nombre_conversations += 1
         
         # Sauvegarder le profil mis à jour
-        self.save_user_profile()
+        self.save_user_profile(session_id=session_id)
     
     def get_contextual_info_for_prompt(self) -> Dict[str, Any]:
         """
@@ -614,18 +639,19 @@ class ContextualMemorySystem:
             'session_active': self.current_session is not None,
             'turns_in_session': len(self.current_session.turns) if self.current_session else 0,
             'cache_size': len(self.session_cache),
-            'user_id': self.get_user_id() if hasattr(st, 'session_state') else 'unknown'
+            'active_sessions': len(self._active_sessions)
         }
     
-    def clear_user_data(self, user_id: Optional[str] = None) -> None:
+    def clear_user_data(self, user_id: Optional[str] = None, session_id: Optional[str] = None) -> None:
         """
         Supprime toutes les données utilisateur (RGPD compliance)
         
         Args:
             user_id: ID de l'utilisateur à supprimer (optionnel)
+            session_id: ID de session (optionnel)
         """
         if user_id is None:
-            user_id = self.get_user_id()
+            user_id = self.get_or_create_user_id(session_id)
         
         # Supprimer le profil
         profile_path = self.storage_path / f"profile_{user_id}.json"
@@ -638,13 +664,19 @@ class ContextualMemorySystem:
         for sid in sessions_to_remove:
             del self.session_cache[sid]
         
+        # Nettoyer les sessions actives
+        if session_id and session_id in self._active_sessions:
+            del self._active_sessions[session_id]
+        
         # Réinitialiser les variables courantes
         self.current_profile = None
         self.current_session = None
         
         logger.info(f"Données utilisateur supprimées pour {user_id}")
 
-# Fonctions utilitaires pour l'intégration
+# Instance globale pour l'API (singleton pattern)
+_memory_system_instance: Optional[ContextualMemorySystem] = None
+
 def get_contextual_memory_system() -> ContextualMemorySystem:
     """
     Obtient l'instance du système de mémoire contextuelle (singleton)
@@ -652,17 +684,27 @@ def get_contextual_memory_system() -> ContextualMemorySystem:
     Returns:
         Instance du système de mémoire
     """
-    if 'contextual_memory' not in st.session_state:
-        st.session_state.contextual_memory = ContextualMemorySystem()
+    global _memory_system_instance
     
-    return st.session_state.contextual_memory
+    if _memory_system_instance is None:
+        _memory_system_instance = ContextualMemorySystem()
+    
+    return _memory_system_instance
 
-def get_user_context_for_prompt() -> str:
+def get_user_context_for_prompt(session_id: Optional[str] = None) -> str:
     """
     Fonction utilitaire pour obtenir le contexte utilisateur pour le prompt
     
+    Args:
+        session_id: ID de session (optionnel)
+        
     Returns:
         Addition au prompt système avec contexte utilisateur
     """
     memory_system = get_contextual_memory_system()
+    
+    # Charger le profil pour la session si nécessaire
+    if session_id:
+        memory_system.load_user_profile(session_id=session_id)
+    
     return memory_system.generate_contextual_prompt_addition()

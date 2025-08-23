@@ -1,143 +1,122 @@
-# OrientaBot - Conseiller d'orientation Maroc
+# OrientaBot - Architecture Frontend/Backend
 
-## 📁 Structure du projet
+## 🎯 Résultat de la Séparation
+
+Le projet OrientaBot a été séparé avec succès en deux applications distinctes :
+
+### 🖥️ **Backend (API FastAPI)** - `/backend/`
+- **API REST** complète avec FastAPI
+- **Logique métier** (chat, RAG, mémoire contextuelle)  
+- **Base de données vectorielle** et système de recherche hybride
+- **Port par défaut**: 8000
+
+### 🎨 **Frontend (Interface Streamlit)** - `/frontend/`  
+- **Interface utilisateur** moderne avec Streamlit
+- **Client API** pour communiquer avec le backend
+- **Gestion de session** et état utilisateur
+- **Port par défaut**: 8501
+
+## 🚀 Instructions de Lancement
+
+### 1. Démarrer le Backend
+```bash
+cd backend
+pip install -r requirements.txt
+cp .env.example .env
+# Configurer GROQ_API_KEY dans .env
+python run.py
+```
+
+### 2. Démarrer le Frontend  
+```bash
+cd frontend
+pip install -r requirements.txt
+cp .env.example .env
+# Configurer BACKEND_API_URL=http://localhost:8000
+python run.py
+```
+
+### 3. Accès
+- **Frontend**: http://localhost:8501
+- **Backend API**: http://localhost:8000
+- **Documentation API**: http://localhost:8000/docs
+
+## 📁 Structure Détaillée
 
 ```
 OrientaBot/
-├── src/                          # Code source principal
-│   ├── main.py                   # Point d'entrée de l'application
-│   ├── core/                     # Configuration et gestion de session
-│   │   ├── __init__.py
-│   │   ├── config.py            # Configuration de l'application
-│   │   └── session_manager.py   # Gestion des sessions Streamlit
-│   ├── ui/                       # Interface utilisateur
-│   │   ├── __init__.py
-│   │   ├── components.py        # Composants UI Streamlit
-│   │   └── styles.py           # Styles CSS personnalisés
-│   ├── chat/                     # Gestion des conversations
-│   │   ├── __init__.py
-│   │   ├── handler.py          # Gestionnaire de chat et API Groq
-│   │   └── prompts.py          # Prompts système et conversation
-│   ├── rag/                      # Système RAG (Retrieval Augmented Generation)
-│   │   ├── __init__.py
-│   │   ├── manager.py          # Gestionnaire principal RAG
-│   │   ├── vector_store.py     # Base vectorielle FAISS
-│   │   └── pdf_processor.py    # Traitement des documents PDF
-│   └── utils/                    # Utilitaires
-│       ├── __init__.py
-│       └── combine_pdfs.py     # Combinaison de PDFs
-├── data/                         # Données
-│   ├── raw/                     # PDFs sources des écoles
-│   │   ├── Ecole-Nationale-des-Sciences-Appliquees-El-Jadida.pdf
-│   │   ├── EMSI-CASA.pdf
-│   │   └── ISPITS.pdf
-│   └── processed/               # Données traitées
-│       ├── ecoles_maroc_combined.pdf
-│       ├── chunks.pkl          # Chunks de texte vectorisés
-│       ├── faiss_index.bin     # Index FAISS
-│       └── metadata.json       # Métadonnées des documents
-├── run.py                       # Script de lancement
-├── requirements.txt             # Dépendances Python
-└── README.md                    # Documentation
-
+├── backend/                    # API Backend
+│   ├── src/
+│   │   ├── api/               # Routes FastAPI
+│   │   │   ├── main.py        # Application principale
+│   │   │   ├── models/        # Modèles Pydantic
+│   │   │   └── routes/        # Routes (chat, profile, search, system)
+│   │   ├── chat/              # Gestionnaires de conversation
+│   │   ├── core/              # Configuration et mémoire
+│   │   ├── rag/               # Système RAG et recherche
+│   │   └── utils/             # Utilitaires
+│   ├── data/                  # Données partagées
+│   ├── requirements.txt       # Dépendances backend
+│   └── run.py                 # Script de lancement
+│
+├── frontend/                   # Interface Utilisateur  
+│   ├── src/
+│   │   ├── main.py            # Application Streamlit
+│   │   ├── ui/                # Composants d'interface
+│   │   ├── core/              # Session manager Streamlit
+│   │   └── services/          # Client API
+│   ├── requirements.txt       # Dépendances frontend
+│   └── run.py                 # Script de lancement
+│
+├── data/                      # Données originales (référence)
+└── README.md       # Cette documentation
 ```
 
-## 🚀 Installation et lancement
+## 🔄 Communication Frontend/Backend
 
-### 1. Installation des dépendances
+Le frontend communique avec le backend via l'API REST :
 
-```bash
-pip install -r requirements.txt
-```
+- **POST /api/chat/message** - Envoi de messages
+- **GET /api/chat/history/{session_id}** - Historique
+- **POST /api/profile/{user_id}** - Gestion profils
+- **POST /api/search/** - Recherche RAG
+- **GET /api/system/stats** - Statistiques
 
-### 2. Configuration
+## ✅ Avantages de cette Architecture
 
-Créez un fichier `.env` avec votre clé API Groq :
+1. **🔧 Maintenance** - Séparation claire des responsabilités
+2. **📈 Scalabilité** - Backend et frontend indépendants
+3. **🔒 Sécurité** - API centralisée avec authentification possible
+4. **🚀 Performance** - Chaque service optimisé pour son rôle
+5. **🔄 Flexibilité** - Possibilité de créer d'autres interfaces
+6. **🐳 Déploiement** - Containers Docker indépendants
 
-```env
-GROQ_API_KEY=votre_cle_groq_ici
-GROQ_MODEL=llama3-70b-8192
-```
+## 🐛 Résolution de Problèmes
 
-### 3. Lancement de l'application
+### Backend ne démarre pas
+- Vérifier que GROQ_API_KEY est configuré
+- Contrôler que le port 8000 est libre
 
-```bash
-# Méthode recommandée avec le script de lancement
-python run.py
+### Frontend ne se connecte pas au Backend
+- Vérifier que le backend est démarré
+- Contrôler BACKEND_API_URL dans frontend/.env
+- Tester http://localhost:8000/health
 
-# Ou avec streamlit directement
-streamlit run run.py
+### Données manquantes
+- Les PDFs doivent être dans backend/data/raw/
+- L'index vectoriel se reconstruit automatiquement
 
-# Ou en spécifiant le PYTHONPATH manuellement
-PYTHONPATH=src streamlit run src/main.py
-```
+## 🎯 Prochaines Étapes Recommandées
 
-## 📋 Modules
+1. **Docker** - Conteneurisation des deux services
+2. **Auth** - Système d'authentification utilisateur  
+3. **BDD** - Base de données persistante (PostgreSQL)
+4. **Cache** - Redis pour les sessions
+5. **Monitoring** - Logs et métriques centralisés
+6. **CI/CD** - Pipeline de déploiement automatisé
 
-### Core
-- **config.py** : Configuration centralisée de l'application
-- **session_manager.py** : Gestion des sessions et état de l'application
+---
 
-### UI
-- **components.py** : Composants d'interface utilisateur réutilisables
-- **styles.py** : Styles CSS personnalisés pour Streamlit
+✅ **La séparation est complète et fonctionnelle !** 
 
-### Chat
-- **handler.py** : Gestionnaire des conversations avec l'API Groq
-- **prompts.py** : Prompts système et démarreurs de conversation
-
-### RAG
-- **manager.py** : Orchestrateur du système RAG
-- **vector_store.py** : Gestion de la base vectorielle avec FAISS
-- **pdf_processor.py** : Traitement et extraction de texte des PDFs
-
-### Utils
-- **combine_pdfs.py** : Utilitaire pour combiner plusieurs PDFs
-
-## 🔧 Développement
-
-### Ajout de nouveaux PDFs d'écoles
-
-1. Placez les PDFs dans `data/raw/`
-2. Relancez l'application pour réindexer automatiquement
-
-### Modification des prompts
-
-Éditez `src/chat/prompts.py` pour personnaliser les prompts système.
-
-### Personnalisation de l'interface
-
-Modifiez `src/ui/components.py` et `src/ui/styles.py` pour personnaliser l'apparence.
-
-## 📦 Structure modulaire
-
-Cette nouvelle organisation offre :
-
-- **Séparation claire des responsabilités** : Chaque module a un rôle spécifique
-- **Imports explicites** : Facilite la maintenance et la compréhension
-- **Extensibilité** : Facile d'ajouter de nouveaux modules
-- **Tests** : Structure adaptée pour les tests unitaires
-- **Documentation** : Code mieux organisé et documenté
-
-## 🔄 Migration depuis l'ancienne structure
-
-L'ancienne structure à plat a été réorganisée comme suit :
-
-```
-app.py → src/main.py
-config.py → src/core/config.py
-session_manager.py → src/core/session_manager.py
-components.py → src/ui/components.py
-styles.py → src/ui/styles.py
-chat_handler.py → src/chat/handler.py
-prompts.py → src/chat/prompts.py
-rag_manager.py → src/rag/manager.py
-vector_store.py → src/rag/vector_store.py
-pdf_processor.py → src/rag/pdf_processor.py
-combine_pdfs.py → src/utils/combine_pdfs.py
-pdfs/ → data/raw/
-data/ → data/processed/
-vector_db/ → data/processed/
-```
-
-Tous les imports ont été mis à jour automatiquement pour fonctionner avec la nouvelle structure.
+Les deux applications peuvent maintenant évoluer indépendamment tout en préservant toutes les fonctionnalités d'OrientaBot.
