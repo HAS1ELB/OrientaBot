@@ -15,13 +15,13 @@ from groq import Groq
 from typing import List, Dict, Optional, Any, Generator
 
 # Import des modules de base
-from core.config import GROQ_API_KEY, GROQ_MODEL, MAX_TOKENS
-from core.contextual_memory import get_contextual_memory_system, get_user_context_for_prompt
+from ..core.config import GROQ_API_KEY, GROQ_MODEL, MAX_TOKENS
+from ..core.contextual_memory import get_contextual_memory_system, get_user_context_for_prompt
 
 # Import des modules d'amélioration
-from chat.enhanced_prompts import get_enhanced_system_prompt, detect_user_profiles, classify_user_question
-from rag.hybrid_search import create_hybrid_search_engine, SearchMode, HybridSearchEngine
-from rag.semantic_processor import SemanticDocumentProcessor, convert_to_document_chunk
+from ..chat.enhanced_prompts import get_enhanced_system_prompt, detect_user_profiles, classify_user_question
+from ..rag.hybrid_search import create_hybrid_search_engine, SearchMode, HybridSearchEngine
+from ..rag.semantic_processor import SemanticDocumentProcessor, convert_to_document_chunk
 
 # Import RAG de base
 try:

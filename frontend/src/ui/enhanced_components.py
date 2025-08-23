@@ -8,12 +8,12 @@ from typing import Optional, Dict, Any
 
 # Import des modules de base
 from .styles import get_custom_css, get_info_box_html, get_footer_html
-from chat.prompts import get_tips_sidebar
+from backend.src.chat.prompts import get_tips_sidebar
 from core.session_manager import SessionManager
 
 # Import des modules enrichis
-from core.contextual_memory import get_contextual_memory_system
-from chat.enhanced_prompts import detect_user_profiles, classify_user_question
+from backend.src.core.contextual_memory import get_contextual_memory_system
+from backend.src.chat.enhanced_prompts import detect_user_profiles, classify_user_question
 
 def render_enhanced_sidebar():
     """Sidebar enrichie avec nouvelles fonctionnalités et statistiques"""
@@ -201,7 +201,7 @@ def render_user_stats():
         st.progress(progression / 100)
         st.caption(f"Progression dans l'orientation: {progression}%")
 
-def render_enhanced_info_box():
+'''def render_enhanced_info_box():
     """Boîte d'information enrichie avec nouvelles fonctionnalités"""
     info_html = f"""
     <div class="info-box">
@@ -217,7 +217,7 @@ def render_enhanced_info_box():
         <p><strong>🎯 Conseil :</strong> Plus vous partagez d'informations, plus mes conseils deviennent précis !</p>
     </div>
     """
-    st.markdown(info_html, unsafe_allow_html=True)
+    st.markdown(info_html, unsafe_allow_html=True)'''
 
 def render_conversation_insights():
     """Affiche des insights sur la conversation en cours"""
@@ -242,7 +242,7 @@ def render_conversation_insights():
         # Longueur de conversation
         st.markdown(f"**Messages:** {len(st.session_state.messages)}")
 
-def render_enhanced_footer():
+'''def render_enhanced_footer():
     """Footer enrichi avec informations sur les améliorations"""
     footer_html = f"""
     <div class="footer">
@@ -278,7 +278,7 @@ def render_enhanced_footer():
     </div>
     """
     st.markdown(footer_html, unsafe_allow_html=True)
-
+'''
 def display_system_performance():
     """Affiche les métriques de performance du système enrichi"""
     if not st.session_state.get('debug_mode', False):
@@ -325,15 +325,15 @@ def render_sidebar():
     # Métriques système en mode debug
     display_system_performance()
 
-# Fonction pour remplacer render_info_box
+'''# Fonction pour remplacer render_info_box
 def render_info_box():
     """Point d'entrée pour la boîte d'information enrichie"""
-    render_enhanced_info_box()
+    render_enhanced_info_box()'''
 
-# Fonction pour remplacer render_footer  
+'''# Fonction pour remplacer render_footer  
 def render_footer():
     """Point d'entrée pour le footer enrichi"""
-    render_enhanced_footer()
+    render_enhanced_footer()'''
 
 # CSS enrichi pour les nouveaux composants
 def get_enhanced_css():

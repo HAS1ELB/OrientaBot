@@ -7,11 +7,11 @@ import re
 import logging
 from typing import List, Dict, Any, Optional, Tuple, Generator
 from groq import Groq
-from core.config import GROQ_API_KEY, GROQ_MODEL, MAX_TOKENS
+from ..core.config import GROQ_API_KEY, GROQ_MODEL, MAX_TOKENS
 
 # Import RAG components
 try:
-    from rag.manager import RAGManager
+    from ..rag.manager import RAGManager
     RAG_AVAILABLE = True
     logger = logging.getLogger(__name__)
 except ImportError as e:

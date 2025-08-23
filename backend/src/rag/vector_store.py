@@ -11,7 +11,7 @@ from typing import List, Dict, Any, Tuple
 import numpy as np
 
 # Import the DocumentChunk from the same module
-from rag.pdf_processor import DocumentChunk
+from .pdf_processor import DocumentChunk
 
 # Try to import optional ML dependencies
 try:

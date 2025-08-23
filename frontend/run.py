@@ -15,7 +15,7 @@ def main():
     """Lance l'application Streamlit"""
     
     # Configuration depuis les variables d'environnement
-    host = os.getenv("STREAMLIT_HOST", "0.0.0.0")
+    host = os.getenv("STREAMLIT_HOST", "127.0.0.1")
     port = int(os.getenv("STREAMLIT_PORT", 8501))
     backend_url = os.getenv("BACKEND_API_URL", "http://localhost:8000")
     

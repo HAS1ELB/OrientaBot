@@ -579,6 +579,7 @@ class SemanticDocumentProcessor:
         
         return chunks
 
+from .pdf_processor import DocumentChunk
 def convert_to_document_chunk(semantic_chunk: SemanticChunk) -> 'DocumentChunk':
     """
     Convertit un SemanticChunk en DocumentChunk pour compatibilité
@@ -589,7 +590,7 @@ def convert_to_document_chunk(semantic_chunk: SemanticChunk) -> 'DocumentChunk':
     Returns:
         DocumentChunk compatible avec l'ancien système
     """
-    from .pdf_processor import DocumentChunk
+    
     
     return DocumentChunk(
         content=semantic_chunk.content,

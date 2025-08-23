@@ -2,7 +2,7 @@
 Session state management for the OrientaBot application
 """
 import streamlit as st
-from .config import DEFAULT_TEMPERATURE
+from backend.src.core.config import DEFAULT_TEMPERATURE
 
 class SessionManager:
     @staticmethod

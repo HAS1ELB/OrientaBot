@@ -11,9 +11,7 @@ from ui.components import (
     apply_custom_styles
 )
 from ui.enhanced_components import (
-    render_info_box,
     render_sidebar,
-    render_footer,
     apply_enhanced_styles
 )
 from core.session_manager import SessionManager
@@ -230,7 +228,6 @@ def main():
     
     # Interface principale
     render_header()
-    render_info_box()
     render_sidebar()
     
     # Panneau de debug
@@ -255,9 +252,6 @@ def main():
                 process_user_message_streaming(prompt)
             else:
                 process_user_message(prompt)
-    
-    # Pied de page
-    render_footer()
 
 if __name__ == "__main__":
     main()

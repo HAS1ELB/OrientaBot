@@ -10,8 +10,8 @@ from typing import List, Dict, Any, Optional, Tuple
 import re
 
 # Fixed imports - use absolute imports from rag module
-from rag.pdf_processor import PDFProcessor, DocumentChunk
-from rag.vector_store import VectorStore
+from .pdf_processor import PDFProcessor, DocumentChunk
+from .vector_store import VectorStore
 
 logger = logging.getLogger(__name__)
 

@@ -3,7 +3,7 @@ Module core - Configuration et gestion de session
 Contient les fonctionnalités principales de configuration et de gestion des sessions
 """
 
-from .config import *
+from backend.src.core.config import *
 
 # Import SessionManager seulement si streamlit est disponible
 try:
