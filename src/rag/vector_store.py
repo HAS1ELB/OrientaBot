@@ -9,7 +9,9 @@ import logging
 from pathlib import Path
 from typing import List, Dict, Any, Tuple
 import numpy as np
-from .pdf_processor import DocumentChunk
+
+# Import the DocumentChunk from the same module
+from rag.pdf_processor import DocumentChunk
 
 # Try to import optional ML dependencies
 try:
@@ -20,8 +22,6 @@ except ImportError as e:
     ML_DEPENDENCIES_AVAILABLE = False
     SentenceTransformer = None
     faiss = None
-    logger = logging.getLogger(__name__)
-    logger.warning(f"ML dependencies not available: {e}. RAG functionality will be disabled.")
 
 logger = logging.getLogger(__name__)
 
@@ -30,7 +30,7 @@ class VectorStore:
     
     def __init__(self, 
                  embedding_model: str = "sentence-transformers/all-MiniLM-L6-v2",
-                 vector_db_path: str = "vector_db"):
+                 vector_db_path: str = "data/processed"):
         """
         Initialise le store vectoriel
         
@@ -41,7 +41,7 @@ class VectorStore:
         self.ml_available = ML_DEPENDENCIES_AVAILABLE
         self.embedding_model_name = embedding_model
         self.vector_db_path = Path(vector_db_path)
-        self.vector_db_path.mkdir(exist_ok=True)
+        self.vector_db_path.mkdir(parents=True, exist_ok=True)
         
         # Fichiers de persistance
         self.index_path = self.vector_db_path / "faiss_index.bin"
@@ -56,6 +56,7 @@ class VectorStore:
             self._load_embedding_model()
         else:
             logger.warning("ML dependencies not available. Vector store will operate in fallback mode.")
+            logger.warning("To enable RAG functionality, install: pip install sentence-transformers faiss-cpu")
         
         # Charger la base existante si elle existe
         self.index = None
@@ -63,7 +64,10 @@ class VectorStore:
         self.metadata = {}
         
         if self._database_exists() and self.ml_available:
-            self.load_database()
+            try:
+                self.load_database()
+            except Exception as e:
+                logger.warning(f"Failed to load existing database: {e}")
     
     def _load_embedding_model(self):
         """Charge le modèle d'embeddings"""
@@ -103,7 +107,8 @@ class VectorStore:
             embeddings = self.embedding_model.encode(
                 texts, 
                 show_progress_bar=True,
-                normalize_embeddings=True
+                normalize_embeddings=True,
+                batch_size=32  # Add batch size to avoid memory issues
             )
             return embeddings
         except Exception as e:
@@ -132,12 +137,20 @@ class VectorStore:
         
         # Créer les embeddings
         logger.info("Création des embeddings...")
-        embeddings = self.create_embeddings(texts)
+        try:
+            embeddings = self.create_embeddings(texts)
+        except Exception as e:
+            logger.error(f"Failed to create embeddings: {e}")
+            return
         
         # Créer l'index FAISS
         logger.info("Construction de l'index FAISS...")
-        self.index = faiss.IndexFlatIP(self.embedding_dimension)  # Inner Product pour similarité cosine
-        self.index.add(embeddings.astype('float32'))
+        try:
+            self.index = faiss.IndexFlatIP(self.embedding_dimension)  # Inner Product pour similarité cosine
+            self.index.add(embeddings.astype('float32'))
+        except Exception as e:
+            logger.error(f"Failed to create FAISS index: {e}")
+            return
         
         # Stocker les chunks
         self.chunks = chunks
@@ -269,11 +282,12 @@ class VectorStore:
         if self.chunks and self.ml_available:
             # Statistiques sur les chunks
             chunk_sizes = [len(chunk.content) for chunk in self.chunks]
-            stats.update({
-                'avg_chunk_size': np.mean(chunk_sizes),
-                'min_chunk_size': np.min(chunk_sizes),
-                'max_chunk_size': np.max(chunk_sizes)
-            })
+            if chunk_sizes:  # Avoid empty list
+                stats.update({
+                    'avg_chunk_size': np.mean(chunk_sizes),
+                    'min_chunk_size': np.min(chunk_sizes),
+                    'max_chunk_size': np.max(chunk_sizes)
+                })
         
         return stats
     
@@ -299,7 +313,10 @@ class VectorStore:
         # Supprimer les fichiers
         for file_path in [self.index_path, self.chunks_path, self.metadata_path]:
             if file_path.exists():
-                file_path.unlink()
+                try:
+                    file_path.unlink()
+                except Exception as e:
+                    logger.warning(f"Could not delete {file_path}: {e}")
         
         # Réinitialiser les variables
         self.index = None

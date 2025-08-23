@@ -9,8 +9,9 @@ from pathlib import Path
 from typing import List, Dict, Any, Optional, Tuple
 import re
 
-from .pdf_processor import PDFProcessor, DocumentChunk
-from .vector_store import VectorStore
+# Fixed imports - use absolute imports from rag module
+from rag.pdf_processor import PDFProcessor, DocumentChunk
+from rag.vector_store import VectorStore
 
 logger = logging.getLogger(__name__)
 
@@ -38,6 +39,10 @@ class RAGManager:
         self.pdf_folder = Path(pdf_folder)
         self.vector_db_path = Path(vector_db_path)
         
+        # Créer les dossiers s'ils n'existent pas
+        self.pdf_folder.mkdir(parents=True, exist_ok=True)
+        self.vector_db_path.mkdir(parents=True, exist_ok=True)
+        
         # Composants
         self.pdf_processor = PDFProcessor(chunk_size=chunk_size, chunk_overlap=chunk_overlap)
         self.vector_store = VectorStore(
@@ -51,7 +56,7 @@ class RAGManager:
         self.context_window_size = 3000  # Taille max du contexte en caractères
         
         logger.info("RAGManager initialisé")
-        logger.info(f"📁 PDFs: {self.pdf_folder}")
+        logger.info(f"📂 PDFs: {self.pdf_folder}")
         logger.info(f"🗄️ Base vectorielle: {self.vector_db_path}")
     
     def initialize_knowledge_base(self, force_rebuild: bool = False) -> bool:
@@ -70,12 +75,18 @@ class RAGManager:
             return False
             
         try:
-            # Vérifier si la base existe déjà
+            # Vérifier si la base existe déjà 
             if not force_rebuild and self.vector_store._database_exists():
                 logger.info("Base vectorielle existante trouvée")
-                stats = self.vector_store.get_stats()
-                logger.info(f"📊 Statistiques: {stats['total_chunks']} chunks, {len(stats['sources'])} sources")
-                return True
+                try:
+                    self.vector_store.load_database()
+                    stats = self.vector_store.get_stats()
+                    logger.info(f"📊 Statistiques: {stats['total_chunks']} chunks, {len(stats['sources'])} sources")
+                    return True
+                except Exception as e:
+                    logger.warning(f"Erreur lors du chargement de la base existante: {e}")
+                    logger.info("Reconstruction de la base...")
+                    force_rebuild = True
             
             # Vérifier que le dossier PDFs existe et contient des fichiers
             if not self.pdf_folder.exists():
