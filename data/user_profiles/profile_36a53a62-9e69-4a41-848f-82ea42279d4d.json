@@ -1,0 +1,30 @@
+{
+  "filiere": "st",
+  "moyenne_generale": null,
+  "matieres_fortes": [],
+  "matieres_faibles": [],
+  "niveau_francais": "bon",
+  "niveau_anglais": "moyen",
+  "interets": [
+    "informatique"
+  ],
+  "valeurs": [
+    "famille"
+  ],
+  "traits_personnalite": [],
+  "ville": "Moyenne",
+  "region": null,
+  "situation_familiale": "normale",
+  "niveau_socio_economique": "moyen",
+  "soutien_familial": "positif",
+  "budget_formation": "flexible",
+  "mobilite_geographique": "flexible",
+  "preferences_secteur": [],
+  "contraintes_specifiques": [],
+  "confiance_orientation": 3,
+  "ouverture_changement": 3,
+  "niveau_information": 2,
+  "creation_date": "2025-08-23T14:07:53.896756",
+  "derniere_mise_a_jour": "2025-08-23T14:07:55.865000",
+  "nombre_conversations": 2
+}
