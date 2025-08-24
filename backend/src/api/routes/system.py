@@ -254,6 +254,35 @@ async def update_system_config(config_updates: dict):
             detail=f"Erreur lors de la mise à jour: {str(e)}"
         )
 
+@router.get("/models")
+async def get_available_models():
+    """
+    Retourne les modèles disponibles (compatibilité OpenAI API)
+    """
+    try:
+        models = {
+            "object": "list",
+            "data": [
+                {
+                    "id": os.getenv("GROQ_MODEL", "llama3-70b-8192"),
+                    "object": "model",
+                    "created": 1687882411,
+                    "owned_by": "groq",
+                    "permission": [],
+                    "root": os.getenv("GROQ_MODEL", "llama3-70b-8192"),
+                    "parent": None
+                }
+            ]
+        }
+        return models
+        
+    except Exception as e:
+        logger.error(f"Erreur lors de la récupération des modèles: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Erreur lors de la récupération des modèles: {str(e)}"
+        )
+
 @router.get("/logs")
 async def get_system_logs(
     lines: int = 100,

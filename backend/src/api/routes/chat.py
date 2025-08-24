@@ -16,16 +16,26 @@ from api.models import (
     ErrorResponse
 )
 
-# Importation des modules backend (sera ajusté après le déplacement des modules)
-# from chat.enhanced_handler import EnhancedChatHandler
-# from core.contextual_memory import get_contextual_memory_system
+# Importation du module backend simplifié
+from api.simple_chat_handler import SimpleChatHandler
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
-# Instances globales des gestionnaires (sera initialisé avec les vrais modules)
+# Instance globale du gestionnaire
 chat_handler = None
-memory_system = None
+
+def get_or_create_chat_handler():
+    """Récupère ou crée l'instance du chat handler"""
+    global chat_handler
+    if chat_handler is None:
+        try:
+            chat_handler = SimpleChatHandler()
+            logger.info("✅ Simple chat handler initialisé")
+        except Exception as e:
+            logger.error(f"❌ Erreur lors de l'initialisation du chat handler: {e}")
+            raise
+    return chat_handler
 
 @router.post("/message", response_model=ChatResponse)
 async def send_message(request: ChatRequest):
@@ -42,32 +52,37 @@ async def send_message(request: ChatRequest):
                 detail="Le message ne peut pas être vide"
             )
         
-        # TODO: Remplacer par la vraie logique une fois les modules déplacés
-        # Pour l'instant, réponse simulée
+        # Utiliser le chat handler simple
         session_id = request.session_id or f"session_{int(time.time())}"
         
-        # Simulation de traitement
-        await asyncio.sleep(0.1)  # Simule le temps de traitement
+        # Récupérer le chat handler
+        handler = get_or_create_chat_handler()
         
-        mock_response = {
+        # Traiter le message
+        result = handler.process_message(
+            message=request.message,
+            conversation_history=request.conversation_history or [],
+            temperature=request.temperature,
+            session_id=session_id
+        )
+        
+        if result["status"] == "error":
+            raise HTTPException(
+                status_code=500,
+                detail=f"Erreur du chat handler: {result.get('error', 'Erreur inconnue')}"
+            )
+        
+        # Préparer la réponse API
+        api_response = {
             "status": StatusEnum.SUCCESS,
-            "response": f"Réponse simulée pour: {request.message}",
+            "response": result["response"],
             "session_id": session_id,
-            "recommendations": {
-                "ecoles_recommandees": ["ENSA", "EMSI"],
-                "filieres_adaptees": ["Informatique", "Génie Civil"]
-            },
-            "context_used": [
-                {
-                    "source": "ENSA El Jadida",
-                    "score": 0.85,
-                    "content": "Informations sur les programmes d'ingénierie"
-                }
-            ],
+            "recommendations": result.get("recommendations"),
+            "context_used": [],  # Simple handler doesn't use RAG yet
             "processing_time": time.time() - start_time
         }
         
-        return ChatResponse(**mock_response)
+        return ChatResponse(**api_response)
         
     except HTTPException:
         raise
@@ -85,23 +100,19 @@ async def stream_message(request: ChatRequest):
     """
     async def generate_response() -> AsyncGenerator[str, None]:
         try:
-            # TODO: Remplacer par le vrai streaming une fois les modules déplacés
             session_id = request.session_id or f"session_{int(time.time())}"
             
-            # Simulation de streaming
-            response_parts = [
-                "Bonjour ! ",
-                "Je comprends votre question sur ",
-                f"'{request.message}'. ",
-                "Laissez-moi analyser cela pour vous... ",
-                "\n\nBased sur votre profil, ",
-                "je recommande de considérer ",
-                "les options suivantes..."
-            ]
+            # Récupérer le chat handler
+            handler = get_or_create_chat_handler()
             
-            for part in response_parts:
-                yield f"data: {json.dumps({'content': part, 'session_id': session_id})}\n\n"
-                await asyncio.sleep(0.2)  # Simule le délai de génération
+            # Streamer la réponse
+            for chunk in handler.stream_message(
+                message=request.message,
+                conversation_history=request.conversation_history or [],
+                temperature=request.temperature,
+                session_id=session_id
+            ):
+                yield f"data: {json.dumps({'content': chunk, 'session_id': session_id})}\n\n"
                 
             yield f"data: {json.dumps({'done': True, 'session_id': session_id})}\n\n"
             
@@ -207,19 +218,17 @@ async def analyze_user_context(request: ChatRequest):
             detail=f"Erreur lors de l'analyse: {str(e)}"
         )
 
-# Fonction d'initialisation qui sera appelée après le déplacement des modules
+# Fonction d'initialisation pour les gestionnaires de chat
 async def initialize_chat_handlers():
     """
-    Initialize les gestionnaires de chat avec les vrais modules
+    Initialize les gestionnaires de chat
     """
-    global chat_handler, memory_system
+    global chat_handler
     
     try:
-        # TODO: À implémenter une fois les modules déplacés
-        # chat_handler = EnhancedChatHandler()
-        # memory_system = get_contextual_memory_system()
-        logger.info("Gestionnaires de chat initialisés (simulation)")
+        chat_handler = get_or_create_chat_handler()
+        logger.info("✅ Gestionnaires de chat initialisés avec succès")
         
     except Exception as e:
-        logger.error(f"Erreur lors de l'initialisation des gestionnaires: {e}")
+        logger.error(f"❌ Erreur lors de l'initialisation des gestionnaires: {e}")
         raise

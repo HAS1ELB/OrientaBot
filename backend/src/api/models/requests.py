@@ -12,6 +12,7 @@ class ChatRequest(BaseModel):
     user_profile: Optional[Dict[str, Any]] = Field(None, description="Profil utilisateur")
     temperature: float = Field(0.7, ge=0.0, le=2.0, description="Température du modèle")
     stream: bool = Field(False, description="Streaming de la réponse")
+    conversation_history: Optional[List[Dict[str, str]]] = Field([], description="Historique de conversation")
     
 class UserProfileRequest(BaseModel):
     """Modèle pour les requêtes de profil utilisateur"""

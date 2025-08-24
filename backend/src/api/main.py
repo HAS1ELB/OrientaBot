@@ -34,6 +34,9 @@ app.include_router(profile.router, prefix="/api/profile", tags=["profile"])
 app.include_router(search.router, prefix="/api/search", tags=["search"])
 app.include_router(system.router, prefix="/api/system", tags=["system"])
 
+# Route pour compatibilité OpenAI API (éviter les 404)
+app.include_router(system.router, prefix="/v1", tags=["openai-compatibility"])
+
 @app.get("/")
 async def root():
     """Point d'entrée racine de l'API"""
