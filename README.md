@@ -36,7 +36,6 @@ OrientaBot/
 │       ├── chunks.pkl          # Chunks de texte vectorisés
 │       ├── faiss_index.bin     # Index FAISS
 │       └── metadata.json       # Métadonnées des documents
-├── run.py                       # Script de lancement
 ├── requirements.txt             # Dépendances Python
 └── README.md                    # Documentation
 
@@ -75,23 +74,28 @@ PYTHONPATH=src streamlit run src/main.py
 ## 📋 Modules
 
 ### Core
+
 - **config.py** : Configuration centralisée de l'application
 - **session_manager.py** : Gestion des sessions et état de l'application
 
 ### UI
+
 - **components.py** : Composants d'interface utilisateur réutilisables
 - **styles.py** : Styles CSS personnalisés pour Streamlit
 
 ### Chat
+
 - **handler.py** : Gestionnaire des conversations avec l'API Groq
 - **prompts.py** : Prompts système et démarreurs de conversation
 
 ### RAG
+
 - **manager.py** : Orchestrateur du système RAG
 - **vector_store.py** : Gestion de la base vectorielle avec FAISS
 - **pdf_processor.py** : Traitement et extraction de texte des PDFs
 
 ### Utils
+
 - **combine_pdfs.py** : Utilitaire pour combiner plusieurs PDFs
 
 ## 🔧 Développement

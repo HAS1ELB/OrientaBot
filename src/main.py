@@ -131,10 +131,10 @@ def main():
     memory_system = get_contextual_memory_system()
     
     # Render header
-    render_header()
+    #render_header()
     
     # Render info box
-    render_info_box()
+    #render_info_box()
     
     # Render sidebar
     render_sidebar()
@@ -159,7 +159,7 @@ def main():
             )
     
     # Render footer
-    render_footer()
+    #render_footer()
 
 if __name__ == "__main__":
     main()
